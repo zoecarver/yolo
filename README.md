@@ -2,9 +2,17 @@
 
 You probably want to look [here](https://github.com/zoecarver/yolo/blob/master/main.ipynb).
 
+## Example
+
+![example](/Users/zoe/Developer/yolo/yolo/doc/example.png)
+
 ## Things you need
 
-Currently I am reading [these pretrained weights](https://github.com/rodrigo2019/keras-yolo2/releases/download/trained-weights/yolov2-coco-original.h5). 
+Download the weights:
+
+```bash
+wget http://pjreddie.com/media/files/yolo.weights
+```
 
 ## Questions
 
