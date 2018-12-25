@@ -25,8 +25,9 @@ This project was heavily inspired by [this repo](https://github.com/rodrigo2019/
 
 - [x] Implement layers of network (Q1)
 - [x] Pipeline for image processing
-- [ ] Fix weight reader
+- [X] Fix weight reader
   - Once we are here we *should* be able to just load any config file and have it work
+- [ ] Make config reader "standard"
 - [ ] Understand loss function (Q2)
 - [ ] Implementing loss function and training
 - [ ] Improve upon network
