@@ -29,6 +29,8 @@ This project was heavily inspired by [this repo](https://github.com/rodrigo2019/
 
 **miliseconds per evaluation:** ~350
 
+you can see the model images in the `doc` directory. 
+
 ## Roadmap
 
 - [x] Implement layers of network (Q1)
