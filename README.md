@@ -17,6 +17,10 @@ Currently I am reading [these pretrained weights](https://github.com/rodrigo2019
 
 This project was heavily inspired by [this repo](https://github.com/rodrigo2019/keras-yolo2/tree/trained-weights) and [this article](https://blog.paperspace.com/how-to-implement-a-yolo-v3-object-detector-from-scratch-in-pytorch-part-2/) and obviosly is based on [the yolo network](https://pjreddie.com/darknet/yolov2/). 
 
+## Random
+
+**miliseconds per evaluation:** ~350
+
 ## Roadmap
 
 - [x] Implement layers of network (Q1)
