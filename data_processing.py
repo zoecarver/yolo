@@ -234,10 +234,10 @@ def _format_boxes(boxes, original_shape=(416, 416)):
                     max_iou = iou
 
             box = [
-                (center_x * 32) / 416,
-                (center_y * 32) / 416,
-                (center_w * 32) / 416,
-                (center_h * 32) / 416]
+                center_x,
+                center_y,
+                center_w,
+                center_h]
 
             # assign ground truth x, y, w, h, confidence and class probs to y_batch
             y_batch[grid_y, grid_x, best_anchor, 0:4] = box

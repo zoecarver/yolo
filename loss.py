@@ -18,7 +18,7 @@ COORD_SCALE      = 1.0
 CLASS_SCALE      = 1.0
 
 BATCH_SIZE       = 16
-WARM_UP_BATCHES  = 0
+WARM_UP_BATCHES  = 3
 TRUE_BOX_BUFFER  = 10
 
 true_boxes = np.zeros((1, 1, 1, 1, TRUE_BOX_BUFFER, 4))
