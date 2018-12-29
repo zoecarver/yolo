@@ -5,3 +5,4 @@ cells
 *.zip
 *.h5
 weights
+v2_weights
