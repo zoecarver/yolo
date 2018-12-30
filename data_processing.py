@@ -4,6 +4,8 @@ import numpy as np
 from glob import glob
 import xml.etree.ElementTree as ET
 
+from keras.utils import Sequence
+
 anchors = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
 anchors = [(0, 0, anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
 
@@ -46,17 +48,20 @@ def get_objects(file):
     return objects, filename
 
 
-def parse_annotation(dir, x_path='JPEGImages/', y_path='Annotations/', img_ext='.jpg'):
+def parse_annotation(dir, x_path='JPEGImages/', y_path='Annotations/', img_ext='.jpg', annotations_glob=None):
     if dir[-1] != '/':
         dir += '/'
+
+    if annotations_glob is None:
+        annotations_glob = glob(dir + y_path + '*')
 
     images = []
     annotations = []
 
     count = 0
-    length = len(glob(dir + y_path + '*'))
+    length = len(annotations_glob)
     print('length: %f' % length)
-    for file in glob(dir + y_path + '*'):
+    for file in annotations_glob:
         if count % 1000 == 0:
             print('percent complete: %f' % (count / length))
 
@@ -288,5 +293,49 @@ def get_data(data_dir, images=None, annotations=None):
 
 def foo(): return 12
 
+
+class VOCDataGenerator(Sequence):
+
+    def __init__(self, annotations_glob, base_data_dir='VOCdevkit/VOC2012', batch_size=32):
+        self.annotations_glob = annotations_glob
+        self.batch_size = batch_size
+        self.base_data_dir = base_data_dir
+        self.count = 0
+
+    def __len__(self):
+        '''number of batches per epoch'''
+        return int(np.floor(len(self.annotations_glob) / self.batch_size))
+
+    def __getitem__(self, index):
+        ''''generate one batch of data'''
+
+        # Generate indexes of the batch
+        self.count += self.batch_size
+        batch = self.annotations_glob[self.count - self.batch_size: self.count]
+
+        images, annotations = parse_annotation(self.base_data_dir, annotations_glob=batch)
+
+        index = 0
+        for image, boxes in zip(images, annotations):
+            original_shape = image.shape[:2]
+            boxes = _format_boxes(boxes, original_shape=original_shape)
+            annotations[index] = boxes
+            image = cv2.resize(image, (416, 416))
+            images[index] = image
+
+            index += 1
+
+        train_x = np.array(images, dtype='float32')  # hack
+        train_x = train_x[..., ::-1]
+
+        train_y = np.array(annotations, dtype='float32')
+        dummy = np.zeros((len(train_x), 1, 1, 1, 10, 4)) # 10 = TRUE_BOX_BUFFER
+
+        return [train_x, dummy], train_y
+
+    def on_epoch_end(self):
+        # re-shuffle the glob
+        np.random.shuffle(self.annotations_glob)
+        self.count = 0
 
 # (train_x, train_y), (test_x, test_y) = get_data('data')
