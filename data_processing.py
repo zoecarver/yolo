@@ -317,9 +317,9 @@ class VOCDataGenerator(Sequence):
 
         if len(batch) != self.batch_size: # hack to get correct batch_size
             self.count = 0
-            return self.__getitem__(index)
+            return self.__getitem__(1)
 
-        images, annotations = parse_annotation(self.base_data_dir, annotations_glob=batch)
+        images, annotations = parse_annotation(self.base_data_dir, annotations_glob=batch, verbose=0)
 
         index = 0
         for image, boxes in zip(images, annotations):
