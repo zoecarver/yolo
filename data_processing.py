@@ -7,12 +7,23 @@ import xml.etree.ElementTree as ET
 anchors = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
 anchors = [(0, 0, anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
 
+labels = ['pottedplant', 'bottle', 'bird', 'cow', 'sofa', 'tvmonitor', 'person', 'chair', 'aeroplane', 'dog', 'diningtable', 'train', 'head', 'hand', 'horse', 'cat', 'bicycle', 'boat', 'car', 'sheep', 'bus', 'motorbike', 'foot']
 
-def get_objects(file):
+def find(lst, key, value):
+    for i, dic in enumerate(lst):
+        if dic[key] == value:
+            return i
+    return None
+
+
+def get_objects(file):    
     tree = ET.parse(file)
     objects = []
+    filename = None
 
     for element in tree.iter():
+        if 'filename' in element.tag:
+            filename = element.text
         if 'object' in element.tag or 'part' in element.tag:
             obj = {}
 
@@ -32,29 +43,35 @@ def get_objects(file):
                         if 'ymax' in dim.tag:
                             obj['ymax'] = int(round(float(dim.text)))
 
-    return objects
+    return objects, filename
 
 
-def parse_annotation(dir, x_path='images/', y_path='annotations/', img_ext='.jpg'):
+def parse_annotation(dir, x_path='JPEGImages/', y_path='Annotations/', img_ext='.jpg'):
     if dir[-1] != '/':
         dir += '/'
 
     images = []
     annotations = []
 
+    count = 0
+    length = len(glob(dir + y_path + '*'))
+    print('length: %f' % length)
     for file in glob(dir + y_path + '*'):
-        print('processing: %s' % file)
+        if count % 1000 == 0:
+            print('percent complete: %f' % (count / length))
 
         base_path = file.split('/')[-1].split('.')[0]
         image_path = dir + x_path + base_path + img_ext
         annotation_path = dir + y_path + base_path + '.xml'
 
-        boxes = get_objects(annotation_path)
-        image = cv2.imread(image_path)
+        boxes, filename = get_objects(annotation_path)
+        image = cv2.imread(dir + x_path + filename)
 
         images += [image]
         annotations += [boxes]
-
+        
+        count += 1
+        
     return images, annotations
 
 
@@ -186,7 +203,7 @@ def format_boxes(boxes, original_image_shape, new_image_shape=(416, 416)):
 
 
 def _format_boxes(boxes, original_shape=(416, 416)):
-    y_batch = np.zeros((13, 13, 5, 5 + 1))
+    y_batch = np.zeros((13, 13, 5, 5 + 80))
 
     img_h, img_w = original_shape
 
@@ -212,7 +229,7 @@ def _format_boxes(boxes, original_shape=(416, 416)):
         grid_y = int(np.floor(center_y))
 
         if grid_x < 13. and grid_y < 13.:
-            obj_indx = 0
+            obj_indx = labels.index(obj['name'])
 
             center_w = (obj['xmax'] - obj['xmin']) / (
                         416. / 13.)  # unit: grid cell
@@ -245,13 +262,14 @@ def _format_boxes(boxes, original_shape=(416, 416)):
             y_batch[grid_y, grid_x, best_anchor, 5 + obj_indx] = 1.
         else:
             print('bad coordinates')
-
+    
     return y_batch
 
 
-def get_data(data_dir):
+def get_data(data_dir, images=None, annotations=None):
     images, annotations = parse_annotation(data_dir)
-
+    
+    labels = []
     index = 0
     for image, boxes in zip(images, annotations):
         original_shape = image.shape[:2]
@@ -262,6 +280,8 @@ def get_data(data_dir):
 
         index += 1
 
+    print('final labels:')
+    print(labels)
     # return images, annotations
     return train_split(images, annotations)
 

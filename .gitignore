@@ -6,3 +6,8 @@ cells
 *.h5
 weights
 v2_weights
+*.pkl
+train2017/
+annotations/
+VOCdevkit/
+*.tar
