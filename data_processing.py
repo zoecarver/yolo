@@ -48,7 +48,7 @@ def get_objects(file):
     return objects, filename
 
 
-def parse_annotation(dir, x_path='JPEGImages/', y_path='Annotations/', img_ext='.jpg', annotations_glob=None):
+def parse_annotation(dir, x_path='JPEGImages/', y_path='Annotations/', img_ext='.jpg', annotations_glob=None, verbose=1):
     if dir[-1] != '/':
         dir += '/'
 
@@ -60,9 +60,10 @@ def parse_annotation(dir, x_path='JPEGImages/', y_path='Annotations/', img_ext='
 
     count = 0
     length = len(annotations_glob)
-    print('length: %f' % length)
+    if verbose:
+        print('length: %f' % length)
     for file in annotations_glob:
-        if count % 1000 == 0:
+        if count % 1000 == 0 and verbose:
             print('percent complete: %f' % (count / length))
 
         base_path = file.split('/')[-1].split('.')[0]
@@ -296,7 +297,7 @@ def foo(): return 12
 
 class VOCDataGenerator(Sequence):
 
-    def __init__(self, annotations_glob, base_data_dir='VOCdevkit/VOC2012', batch_size=32):
+    def __init__(self, annotations_glob, base_data_dir='VOCdevkit/VOC2012', batch_size=16):
         self.annotations_glob = annotations_glob
         self.batch_size = batch_size
         self.base_data_dir = base_data_dir
@@ -311,7 +312,12 @@ class VOCDataGenerator(Sequence):
 
         # Generate indexes of the batch
         self.count += self.batch_size
-        batch = self.annotations_glob[self.count - self.batch_size: self.count]
+        count = self.count * index
+        batch = self.annotations_glob[count - self.batch_size: count]
+
+        if len(batch) != self.batch_size: # hack to get correct batch_size
+            self.count = 0
+            return self.__getitem__(index)
 
         images, annotations = parse_annotation(self.base_data_dir, annotations_glob=batch)
 
