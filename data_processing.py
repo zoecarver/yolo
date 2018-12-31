@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 
 from keras.utils import Sequence
 
+import json
+
 anchors = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
 anchors = [(0, 0, anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
 
@@ -295,6 +297,21 @@ def get_data(data_dir, images=None, annotations=None):
 def foo(): return 12
 
 
+def find(lst, key, value):
+    for i, dic in enumerate(lst):
+        if dic[key] == value:
+            return i
+    return None
+
+
+def find_all(lst, key, value):
+    out = []
+    for i, dic in enumerate(lst):
+        if dic[key] == value:
+            out += [i]
+    return out
+
+
 class VOCDataGenerator(Sequence):
 
     def __init__(self, annotations_glob, base_data_dir='VOCdevkit/VOC2012', batch_size=16):
@@ -340,4 +357,84 @@ class VOCDataGenerator(Sequence):
         np.random.shuffle(self.annotations_glob)
         self.count = 0
 
-# (train_x, train_y), (test_x, test_y) = get_data('data')
+
+class COCODataGenerator(Sequence):
+
+    def __init__(self, annotations, base_data_dir='train2017', batch_size=16):
+        self.annotations = annotations
+        self.batch_size = batch_size
+        self.base_data_dir = base_data_dir
+
+        with open('annotations/instances_train2017.json') as f:
+            self.data = json.load(f)
+
+    def __len__(self):
+        '''number of batches per epoch'''
+        return int(np.floor(len(self.annotations) / self.batch_size))
+
+    def __getitem__(self, index):
+        ''''generate one batch of data'''
+
+        # Generate indexes of the batch
+        batch = self.annotations[index * self.batch_size: (index + 1) * self.batch_size]
+
+
+        if len(batch) != self.batch_size: # hack to get correct batch_size
+            return self.__getitem__(1)
+
+        images, annotations = [], []
+        for e in batch:
+            image, boxes = self.get_img_ann(e)
+            images += [image]
+            annotations += [boxes]
+
+        index = 0
+        for image, boxes in zip(images, annotations):
+            original_shape = image.shape[:2]
+            boxes = _format_boxes(boxes, original_shape=original_shape)
+            annotations[index] = boxes
+            image = cv2.resize(image, (416, 416))
+            images[index] = image
+
+            index += 1
+
+        train_x = np.array(images, dtype='float32')  # hack
+        train_x = train_x[..., ::-1]
+
+        train_y = np.array(annotations, dtype='float32')
+        dummy = np.zeros((len(train_x), 1, 1, 1, 10, 4)) # 10 = TRUE_BOX_BUFFER
+
+        return [train_x, dummy], train_y
+
+    def on_epoch_end(self):
+        # re-shuffle the glob
+        np.random.shuffle(self.annotations)
+
+    def get_box(self, e):
+        x, y, width, height = e['bbox']
+
+        xmin = x
+        xmax = x + width
+        ymin = y
+        ymax = y + height
+
+        obj = {
+            'name': e['category_id'],
+            'xmin': xmin,
+            'xmax': xmax,
+            'ymin': ymin,
+            'ymax': ymax
+        }
+
+        return obj
+
+    def get_img_ann(self, e):
+        image_index = find(self.data['images'], 'id', e['image_id'])
+        image_obj = self.data['images'][image_index]
+        image = cv2.imread('train2017/' + image_obj['file_name'])
+
+        boxes = []
+        for index in find_all(self.data['annotations'], 'image_id', e['image_id']):
+            boxes += [self.get_box(self.data['annotations'][index])]
+
+        return image, boxes
