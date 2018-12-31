@@ -411,7 +411,7 @@ class COCODataGenerator(Sequence):
         np.random.shuffle(self.annotations)
 
     def get_label_index(self, e):
-        return self.data['categories'][find(self.data['categories'], 'id', e['category_id'])]
+        return find(self.data['categories'], 'id', e['category_id'])
 
     def get_box(self, e):
         x, y, width, height = e['bbox']
