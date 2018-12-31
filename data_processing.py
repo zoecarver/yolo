@@ -372,11 +372,13 @@ class COCODataGenerator(Sequence):
         self.annotation_data = []
         count = 0
         for e in self.annotations:
-            if count % 1000 == 0:
+            if count % 8600 == 0:
                 print('Done %f' % (count / len(self.annotations)))
 
             image_path, boxes = self.get_imgpath_ann(e)
             self.annotation_data += [[image_path, boxes]]
+
+            count += 1
 
     def __len__(self):
         '''number of batches per epoch'''
