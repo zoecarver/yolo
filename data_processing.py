@@ -237,7 +237,7 @@ def _format_boxes(boxes, original_shape=(416, 416)):
         grid_y = int(np.floor(center_y))
 
         if grid_x < 13. and grid_y < 13.:
-            obj_indx = labels.index(obj['name'])
+            obj_indx = obj['name'] # TODO this changes for VOC
 
             center_w = (obj['xmax'] - obj['xmin']) / (
                         416. / 13.)  # unit: grid cell
@@ -410,6 +410,9 @@ class COCODataGenerator(Sequence):
         # re-shuffle the glob
         np.random.shuffle(self.annotations)
 
+    def get_label_index(self, e):
+        return self.data['categories'][find(self.data['categories'], 'id', e['category_id'])]
+
     def get_box(self, e):
         x, y, width, height = e['bbox']
 
@@ -419,7 +422,7 @@ class COCODataGenerator(Sequence):
         ymax = y + height
 
         obj = {
-            'name': e['category_id'],
+            'name': self.get_label_index(e),
             'xmin': xmin,
             'xmax': xmax,
             'ymin': ymin,
