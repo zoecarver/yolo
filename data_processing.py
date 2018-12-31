@@ -360,13 +360,13 @@ class VOCDataGenerator(Sequence):
 
 class COCODataGenerator(Sequence):
 
-    def __init__(self, annotations, base_data_dir='train2017', batch_size=16):
-        self.annotations = annotations
+    def __init__(self, base_data_dir='train2017', batch_size=16):
         self.batch_size = batch_size
         self.base_data_dir = base_data_dir
 
         with open('annotations/instances_train2017.json') as f:
             self.data = json.load(f)
+            self.annotations = self.data['annotations']
 
     def __len__(self):
         '''number of batches per epoch'''
@@ -434,7 +434,7 @@ class COCODataGenerator(Sequence):
         image = cv2.imread('train2017/' + image_obj['file_name'])
 
         boxes = []
-        for index in find_all(self.data['annotations'], 'image_id', e['image_id']):
-            boxes += [self.get_box(self.data['annotations'][index])]
+        for index in find_all(self.annotations, 'image_id', e['image_id']):
+            boxes += [self.get_box(self.annotations[index])]
 
         return image, boxes
