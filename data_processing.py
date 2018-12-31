@@ -368,6 +368,16 @@ class COCODataGenerator(Sequence):
             self.data = json.load(f)
             self.annotations = self.data['annotations']
 
+        print('Pre-Processing annotations...')
+        self.annotation_data = []
+        count = 0
+        for e in self.annotations:
+            if count % 1000 == 0:
+                print('Done %f' % (count / len(self.annotations)))
+
+            image_path, boxes = self.get_imgpath_ann(e)
+            self.annotation_data += [[image_path, boxes]]
+
     def __len__(self):
         '''number of batches per epoch'''
         return int(np.floor(len(self.annotations) / self.batch_size))
@@ -378,18 +388,19 @@ class COCODataGenerator(Sequence):
         # Generate indexes of the batch
         batch = self.annotations[index * self.batch_size: (index + 1) * self.batch_size]
 
-
         if len(batch) != self.batch_size: # hack to get correct batch_size
             return self.__getitem__(1)
 
         images, annotations = [], []
         for e in batch:
-            image, boxes = self.get_img_ann(e)
+            image, boxes = e
             images += [image]
             annotations += [boxes]
 
         index = 0
-        for image, boxes in zip(images, annotations):
+        for image_path, boxes in zip(images, annotations):
+            image = cv2.imread(image_path)
+            image = image / 255
             original_shape = image.shape[:2]
             boxes = _format_boxes(boxes, original_shape=original_shape)
             annotations[index] = boxes
@@ -431,13 +442,12 @@ class COCODataGenerator(Sequence):
 
         return obj
 
-    def get_img_ann(self, e):
+    def get_imgpath_ann(self, e):
         image_index = find(self.data['images'], 'id', e['image_id'])
-        image_obj = self.data['images'][image_index]
-        image = cv2.imread('train2017/' + image_obj['file_name'])
+        image_path = 'train2017/' + self.data['images'][image_index]['file_name']
 
         boxes = []
         for index in find_all(self.annotations, 'image_id', e['image_id']):
             boxes += [self.get_box(self.annotations[index])]
 
-        return image, boxes
+        return image_path, boxes
