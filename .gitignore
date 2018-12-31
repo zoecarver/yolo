@@ -11,3 +11,4 @@ train2017/
 annotations/
 VOCdevkit/
 *.tar
+backup_weights

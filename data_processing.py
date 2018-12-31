@@ -311,12 +311,8 @@ class VOCDataGenerator(Sequence):
         ''''generate one batch of data'''
 
         # Generate indexes of the batch
-        self.count += self.batch_size
-        count = self.count * index
-        batch = self.annotations_glob[count - self.batch_size: count]
-
+        batch = self.annotations_glob[index * self.batch_size: (index + 1) * self.batch_size]
         if len(batch) != self.batch_size: # hack to get correct batch_size
-            self.count = 0
             return self.__getitem__(1)
 
         images, annotations = parse_annotation(self.base_data_dir, annotations_glob=batch, verbose=0)
