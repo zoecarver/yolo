@@ -368,7 +368,7 @@ class COCODataGenerator(Sequence):
             self.data = json.load(f)
             self.annotations = self.data['annotations']
 
-        print('Pre-Processing annotations...')
+        print('Pre-Processing (%i) annotations...' % len(self.annotations))
         self.annotation_data = []
         count = 0
         for e in self.annotations:
