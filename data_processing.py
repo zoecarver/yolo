@@ -11,7 +11,7 @@ import json
 anchors = [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
 anchors = [(0, 0, anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
 
-labels = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+labels = ['red', 'move_stick']
 
 def find(lst, key, value):
     for i, dic in enumerate(lst):
@@ -237,7 +237,7 @@ def _format_boxes(boxes, original_shape=(416, 416)):
         grid_y = int(np.floor(center_y))
 
         if grid_x < 13. and grid_y < 13.:
-            obj_indx = obj['name'] # TODO this changes for VOC
+            obj_indx = labels.index(obj['name'])
 
             center_w = (obj['xmax'] - obj['xmin']) / (
                         416. / 13.)  # unit: grid cell
@@ -310,6 +310,52 @@ def find_all(lst, key, value):
         if dic[key] == value:
             out += [i]
     return out
+
+
+class BrawlDataGenerator(Sequence):
+
+    def __init__(self, annotations_glob, base_data_dir='data', batch_size=16):
+        self.annotations_glob = annotations_glob
+        self.batch_size = batch_size
+        self.base_data_dir = base_data_dir
+        self.count = 0
+
+    def __len__(self):
+        '''number of batches per epoch'''
+        return int(np.floor(len(self.annotations_glob) / self.batch_size))
+
+    def __getitem__(self, index):
+        ''''generate one batch of data'''
+
+        # Generate indexes of the batch
+        batch = self.annotations_glob[index * self.batch_size: (index + 1) * self.batch_size]
+        if len(batch) != self.batch_size: # hack to get correct batch_size
+            return self.__getitem__(1)
+
+        images, annotations = parse_annotation(self.base_data_dir, annotations_glob=batch, x_path='images/', y_path='annotations/', verbose=0)
+
+        index = 0
+        for image, boxes in zip(images, annotations):
+            original_shape = image.shape[:2]
+            boxes = _format_boxes(boxes, original_shape=original_shape)
+            annotations[index] = boxes
+            image = cv2.resize(image, (416, 416))
+            images[index] = image
+
+            index += 1
+
+        train_x = np.array(images, dtype='float32')  # hack
+        train_x = train_x[..., ::-1]
+
+        train_y = np.array(annotations, dtype='float32')
+        dummy = np.zeros((len(train_x), 1, 1, 1, 10, 4)) # 10 = TRUE_BOX_BUFFER
+
+        return [train_x, dummy], train_y
+
+    def on_epoch_end(self):
+        # re-shuffle the glob
+        np.random.shuffle(self.annotations_glob)
+        self.count = 0
 
 
 class VOCDataGenerator(Sequence):
