@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>out91-15.png</filename>
+    <size>
+        <width>960</width>
+        <height>720</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>move_stick</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>50</xmin>
+            <ymin>551</ymin>
+            <xmax>63</xmax>
+            <ymax>553</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>move_stick</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>19</xmin>
+            <ymin>524</ymin>
+            <xmax>54</xmax>
+            <ymax>578</ymax>
+        </bndbox>
+    </object>
+</annotation>

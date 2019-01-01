@@ -1,0 +1,36 @@
+<annotation>
+    <folder>images</folder>
+    <filename>out91-12.png</filename>
+    <size>
+        <width>960</width>
+        <height>720</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>red</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>508</xmin>
+            <ymin>186</ymin>
+            <xmax>563</xmax>
+            <ymax>267</ymax>
+        </bndbox>
+    </object>
+    <object>
+        <name>move_stick</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <occluded>0</occluded>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>39</xmin>
+            <ymin>558</ymin>
+            <xmax>83</xmax>
+            <ymax>601</ymax>
+        </bndbox>
+    </object>
+</annotation>
