@@ -368,12 +368,13 @@ class COCODataGenerator(Sequence):
             self.data = json.load(f)
             self.annotations = self.data['annotations']
 
-        print('Pre-Processing (%i) annotations...' % len(self.annotations))
         self.annotation_data = []
         count = 0
-        for e in self.annotations:
-            if count % 8600 == 0:
-                print('Done %f' % (count / len(self.annotations)))
+        self.dog_annotations = list(filter(lambda a: a['category_id'] == 16, self.annotations))[:1000]
+        print('Pre-Processing (%i) annotations...' % len(self.dog_annotations))
+        for e in self.dog_annotations:            
+            if count % 100 == 0:
+                print('Done %f' % (count / len(self.dog_annotations)))
 
             image_path, boxes = self.get_imgpath_ann(e)
             self.annotation_data += [[image_path, boxes]]
@@ -388,7 +389,7 @@ class COCODataGenerator(Sequence):
         ''''generate one batch of data'''
 
         # Generate indexes of the batch
-        batch = self.annotations[index * self.batch_size: (index + 1) * self.batch_size]
+        batch = self.annotation_data[index * self.batch_size: (index + 1) * self.batch_size]
 
         if len(batch) != self.batch_size: # hack to get correct batch_size
             return self.__getitem__(1)
@@ -445,11 +446,11 @@ class COCODataGenerator(Sequence):
         return obj
 
     def get_imgpath_ann(self, e):
-        image_index = find(self.data['images'], 'id', e['image_id'])
-        image_path = 'train2017/' + self.data['images'][image_index]['file_name']
+        image_obj = list(filter(lambda i: i['id'] == e['image_id'], self.data['images']))[0]
+        image_path = 'train2017/' + image_obj['file_name']
 
         boxes = []
-        for index in find_all(self.annotations, 'image_id', e['image_id']):
-            boxes += [self.get_box(self.annotations[index])]
+        for b in filter(lambda a: a['image_id'] == e['image_id'], self.dog_annotations):
+            boxes += [self.get_box(b)]
 
         return image_path, boxes

@@ -12,3 +12,4 @@ annotations/
 VOCdevkit/
 *.tar
 backup_weights
+*.weights
